@@ -16,12 +16,6 @@ The system architecture is predicated on a high-performance stack engineered for
 
 *   **Hardware Configuration:** The implementation is configured for a multi-GPU environment, specifically **four NVIDIA L4 GPUs**. Tensor parallelism (`tensor_parallel_size = 4`) is employed to distribute the model's parameters and computational load across the hardware.
 
-*   **Key Software Dependencies:**
-    *   **`vllm`**: For serving and executing inference requests to the language model.
-    *   **`polars`** & **`pandas`**: For structured data and metadata manipulation.
-    *   **`unidiff`**: For the parsing and syntactic validation of `git diff` formatted patches.
-    *   **`numpy`**: For numerical computations, particularly in the patch scoring function.
-
 ## 3. Methodological Pipeline
 
 The core of our methodology is a sequential five-stage pipeline. Each stage performs a distinct operation, progressively refining the problem space and generating a candidate solution.
