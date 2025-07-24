@@ -2,93 +2,89 @@
 
 [![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)](https://www.kaggle.com/competitions/konwinski-prize)
 
-## 1. Introduction
+## 1. Abstract
 
-This repository contains the complete source code for the solution that achieved **6th place out of 617 teams**, earning a **Gold Medal** in the [Konwinski Prize](https://www.kaggle.com/competitions/konwinski-prize) competition on Kaggle.
-
-The objective of the competition was to develop an Artificial Intelligence (AI) agent capable of autonomously resolving real-world issues from open-source GitHub repositories. The agent was required to comprehend a problem description, locate the relevant code segments, and automatically generate a correct git diff patch to fix the issue.
+This repository presents the source code and methodology for the 6th place solution in the Konwinski Prize competition. The primary objective of the competition was the development of an autonomous software engineering agent capable of resolving programmatic issues from open-source repositories by automatically generating corrective source code patches. The proposed solution employs a multi-stage methodological pipeline, which systematically reduces the problem's search space through heuristic-guided analysis, generates an ensemble of potential solutions, and utilizes an iterative self-verification mechanism to select the optimal patch. This approach demonstrably achieves high efficacy in automated software repair tasks.
 
 ## 2. System Architecture
 
-Our solution is built upon a high-performance technology stack designed for large-scale LLM inference. The architecture consists of several key components working in concert:
+The system architecture is predicated on a high-performance stack engineered for large-scale language model inference. The primary components are as follows:
 
-*   **Large Language Model:** The core of our agent is the **`Qwen-32B-Preview-AWQ`** model. This is a 32-billion parameter model that has been quantized using Activation-aware Weight Quantization (AWQ), a technique that reduces memory requirements and accelerates inference speed while preserving high model accuracy.
+*   **Language Model:** The core reasoning engine is the **`Qwen-32B-Preview-AWQ`**, a 32-billion parameter, decoder-only transformer model. It has been quantized using the Activation-aware Weight Quantization (AWQ) algorithm to optimize for memory efficiency and inference latency.
 
-*   **Inference Engine:** The system is powered by **`vLLM`**, a state-of-the-art LLM serving library. It was chosen for its high-throughput performance and efficient memory management via PagedAttention, which is critical for handling the batch processing required by our pipeline.
+*   **Inference Engine:** We utilize **`vLLM`** for its high-throughput inference capabilities, enabled by its PagedAttention mechanism. This choice was critical for facilitating the batch processing integral to our pipeline's design.
 
-*   **Hardware Configuration:** The solution is designed and optimized to run on a multi-GPU setup of **4x NVIDIA L4 GPUs**. We utilize tensor parallelism with `tensor_parallel_size = 4` to distribute the model's workload across all available GPUs, enabling the efficient execution of this large model.
+*   **Hardware Configuration:** The implementation is configured for a multi-GPU environment, specifically **four NVIDIA L4 GPUs**. Tensor parallelism (`tensor_parallel_size = 4`) is employed to distribute the model's parameters and computational load across the hardware.
 
-*   **Core Technology Stack:**
-    *   **`vllm`**: For high-performance LLM serving and inference.
-    *   **`polars`** & **`pandas`**: For efficient data manipulation and metadata handling.
-    *   **`unidiff`**: For robust parsing and validation of `git diff` patch files.
-    *   **`numpy`**: For numerical computations, particularly within the advanced patch scoring logic.
+*   **Key Software Dependencies:**
+    *   **`vllm`**: For serving and executing inference requests to the language model.
+    *   **`polars`** & **`pandas`**: For structured data and metadata manipulation.
+    *   **`unidiff`**: For the parsing and syntactic validation of `git diff` formatted patches.
+    *   **`numpy`**: For numerical computations, particularly in the patch scoring function.
 
-## 3. The 5-Stage Solution Pipeline
+## 3. Methodological Pipeline
 
-Our agent operates by executing a sequential 5-stage pipeline to systematically analyze, patch, and verify solutions for each GitHub issue. This structured workflow ensures a high degree of accuracy and minimizes the risk of submitting faulty patches.
+The core of our methodology is a sequential five-stage pipeline. Each stage performs a distinct operation, progressively refining the problem space and generating a candidate solution.
 
-### Stage 1: Dynamic File & Keyword Selection
+### Stage 1: Heuristic-Guided File and Keyword Identification
 
-*   **Problem:** Code repositories are too large to fit into an LLM's context. A smart selection mechanism is required.
-*   **Solution:** The LLM is first prompted with the problem statement and the repository's directory tree. It acts as a junior developer to identify the most relevant source files and the specific keywords (function names, variables, etc.) to search for within them.
+*   **Objective:** To narrow the search space from the entire repository to a small subset of relevant files and code regions.
+*   **Method:** The LLM is prompted with the natural language problem statement and the repository's directory structure. It performs a heuristic-based analysis to nominate a set of candidate files and relevant search keywords (e.g., function names, class definitions) likely associated with the issue.
 *   **Implementation Details:**
     *   **Function:** `get_selection_query()`
-    *   **Batch Size:** `BATCH_SIZE = 7` parallel requests are made to generate a diverse set of candidate files and keywords.
-    *   **Temperature:** `0.6` to balance between focused and exploratory file selection.
+    *   **Batch Size:** `BATCH_SIZE = 7` parallel requests are executed to generate a diverse set of hypotheses.
+    *   **Temperature:** A value of `0.6` is used to promote a balance between focused and exploratory identification.
 
-### Stage 2: Snippet-Based Context Generation
+### Stage 2: Contextual Snippet Extraction
 
-*   **Problem:** Even relevant files contain large amounts of irrelevant code. The context must be further refined.
-*   **Solution:** Using the files and keywords from Stage 1, the system scans the repository and extracts small, relevant "snippets" of code. Each snippet includes the line containing a keyword plus its surrounding context.
+*   **Objective:** To construct a minimal, yet sufficient, code context for the LLM to analyze.
+*   **Method:** The files identified in Stage 1 are scanned for the specified keywords. For each match, a contextual snippet is extracted, comprising the matched line and `12` preceding and succeeding lines. Overlapping or adjacent snippets within a file are merged to form a single, coherent context block.
 *   **Implementation Details:**
     *   **Function:** `fetch_file_contents()`
-    *   **Context Lines:** `context_lines = 12` lines are extracted before and after each keyword match.
-    *   **Snippet Merging:** Overlapping or adjacent snippets are automatically merged (`max_gap = 0`) to create a single, coherent block of code for the LLM to analyze.
+    *   **Parameters:** `context_lines = 12`, `max_gap = 0`.
 
-### Stage 3: Multi-Candidate Patch Generation
+### Stage 3: Ensemble Generation of Candidate Patches
 
-*   **Problem:** Generating a perfect patch in a single attempt is difficult and unreliable.
-*   **Solution:** The agent generates multiple, diverse patch candidates from the curated context. This ensemble approach significantly increases the probability of producing a correct solution.
+*   **Objective:** To mitigate the stochastic nature of code generation by producing multiple, distinct solution candidates.
+*   **Method:** An ensemble of candidate patches is generated in parallel. Each generation request is provided with the identical curated context from Stage 2. This increases the probability of obtaining at least one functionally correct patch.
 *   **Implementation Details:**
     *   **Function:** `get_patch_string()`
-    *   **Batch Size:** `BATCH_SIZE = 7` candidate patches are generated in parallel.
-    *   **Temperature:** `0.7` to encourage variety among the generated patches.
-    *   **Max Tokens:** `MAX_TOKENS = 4096` to set an upper limit on the patch size.
+    *   **Batch Size:** `BATCH_SIZE = 7` candidate patches are generated.
+    *   **Temperature:** A value of `0.7` is used to encourage diversity in the output space.
+    *   **Max Tokens:** `MAX_TOKENS = 4096` to constrain the length of the generated output.
 
-### Stage 4: AI-Powered Verification & Self-Correction
+### Stage 4: Autonomous Verification via Self-Correction Loop
 
-*   **Problem:** The generated patches must be evaluated for correctness before submission.
-*   **Solution:** This is a critical self-correction step. Each candidate patch is fed back into the LLM, along with the original problem statement and context. The LLM is tasked to act as a code reviewer and provide a simple "Yes" or "No" judgment on whether the patch solves the issue.
+*   **Objective:** To autonomously assess the validity and correctness of each generated patch without relying on an external test suite at this stage.
+*   **Method:** A self-verification loop is initiated. Each candidate patch is presented back to the LLM, along with the original problem statement and context. The LLM is then tasked with a binary classification task: to determine if the proposed patch correctly resolves the issue, responding with either `<label>Yes</label>` or `<label>No</label>`.
 *   **Implementation Details:**
     *   **Function:** `get_verification()`
-    *   **Repetitions:** Each patch is verified `VALIDATION_COPY_COUNT = 3` times to ensure the judgment is stable and reliable.
-    *   **Temperature:** `0.3` for more deterministic and consistent evaluation.
-    *   **Output Format:** The prompt constrains the LLM to end its response with either `<label>Yes</label>` or `<label>No</label>`.
+    *   **Validation Count:** Each patch is evaluated `VALIDATION_COPY_COUNT = 3` times to ensure judgmental stability.
+    *   **Temperature:** A low value of `0.3` is used to encourage deterministic and consistent evaluations.
 
-### Stage 5: Advanced Scoring and Selection
+### Stage 5: Quantitative Scoring and Optimal Patch Selection
 
-*   **Problem:** A final, robust decision must be made: which patch to submit, or whether to skip the problem entirely.
-*   **Solution:** A custom scoring algorithm evaluates each candidate patch based on a combination of signals to identify the single best solution.
+*   **Objective:** To select the single optimal patch from the candidate set based on a holistic quality score, or to make an explicit decision to abstain if no candidate is of sufficient quality.
+*   **Method:** A scoring function (`calculate_patch_score`) quantifies the quality of each patch based on a weighted combination of empirical signals.
 *   **Implementation Details:**
     *   **Function:** `choose_patch_string_optimized()`
-    *   **Scoring Logic:**
-        1.  **Verification Score:** The number of "Yes" votes from Stage 4 is the primary factor, with score increasing exponentially (`judgments.count(True) ** 2`).
-        2.  **Validity Checks:** Patches that are syntactically invalid or fail a `patch --dry-run` test are assigned a highly negative score.
-        3.  **Size Penalty:** The `patch_lines_penalty_exponential_aggressive_extreme` function applies a harsh, exponentially increasing penalty to larger patches, strongly favoring concise and targeted fixes.
-    *   **Selection Criteria:** The highest-scoring patch is chosen only if it has at least `min_yes_votes = 2` and its score is an outlier (`np.percentile(scores, 99.0)`). Otherwise, the agent submits nothing, aligning with the competition's "skip is better than wrong" scoring mechanic.
+    *   **Scoring Factors:**
+        1.  **Verification Agreement:** The primary signal is the squared count of "Yes" votes from Stage 4 (`judgments.count(True) ** 2`).
+        2.  **Structural Integrity:** A significant penalty is applied if the patch is syntactically invalid or fails a `patch --dry-run` validation.
+        3.  **Conciseness Penalty:** An exponential penalty, computed by the `patch_lines_penalty_exponential_aggressive_extreme` function, is applied based on the number of lines in the patch, strongly favoring minimal, targeted changes.
+    *   **Selection Logic:** The highest-scoring patch is selected only if it meets a minimum verification threshold (`min_yes_votes = 2`) and its score is statistically significant (exceeds the 99th percentile). If no patch meets these criteria, the agent abstains from submitting a solution.
 
-## 4. Code Structure
+## 4. Code Implementation
 
-The entire solution logic is contained within the `6th-place-solution.ipynb` notebook. The key functions and their roles in the pipeline are summarized below:
+The solution's logic is implemented within the `6th-place-solution.ipynb` notebook. The functions below map directly to the stages of the methodological pipeline.
 
 | Function | Pipeline Stage | Purpose |
 | :--- | :--- | :--- |
-| `predict()` | Wrapper | The main entry point that interfaces with the Kaggle evaluation server. |
-| `predict_inner()` | Orchestrator | Executes the full 5-stage pipeline for a single GitHub issue. |
-| `get_selection_query()` | 1 | Uses the LLM to select relevant files and search keywords. |
-| `fetch_file_contents()` | 2 | Extracts relevant code snippets from the selected files. |
-| `get_patch_string()` | 3 | Uses the LLM to generate multiple candidate patches. |
-| `get_verification()` | 4 | Uses the LLM to verify the correctness of the generated patches. |
-| `calculate_patch_score()` | 5 | Scores each candidate patch based on a weighted set of criteria. |
-| `choose_patch_string_optimized()`| 5 | Selects the single best patch or decides to skip the issue. |
+| `predict()` | Wrapper | Main entry point; interfaces with the Kaggle evaluation environment. |
+| `predict_inner()` | Orchestrator | Executes the full five-stage pipeline for a given problem instance. |
+| `get_selection_query()` | 1 | Executes heuristic analysis for file and keyword identification. |
+| `fetch_file_contents()` | 2 | Extracts and assembles code snippets into a minimal context. |
+| `get_patch_string()` | 3 | Generates an ensemble of candidate source code patches. |
+| `get_verification()` | 4 | Executes the self-verification loop for each candidate patch. |
+| `calculate_patch_score()` | 5 | Computes a quantitative quality score for a patch. |
+| `choose_patch_string_optimized()`| 5 | Implements the final selection logic to identify the optimal patch. |
