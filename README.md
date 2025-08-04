@@ -20,7 +20,7 @@ My solution builds a streamlined yet robust pipeline that maximizes the power of
 
 | Strategy                           | Private LB                                      | Public LB                                     |
 |:----------------------------------:|:----------------------------------------------:|:---------------------------------------------:|
-| Select-Patch-Verify-Choose (Logic) | 0.008237 <br> (3 correct, 2 wrong, 115 skipped) | -0.000097 <br> (1 correct, 1 wrong, 69 skipped) |
+| Select-Patch-Verify-Choose  | 0.008237 <br> (3 correct, 2 wrong, 115 skipped) | -0.000097 <br> (1 correct, 1 wrong, 69 skipped) |
 
 
 ## Select-Patch-Verify-Choose Pipeline
@@ -57,6 +57,7 @@ Example aggregated verification results where only the second and sixth patches 
   []                              # Candidate 7: No Yes votes
 ]
 ```
+
 
 
 
