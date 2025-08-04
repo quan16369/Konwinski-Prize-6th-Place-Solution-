@@ -1,6 +1,6 @@
 # Konwinski Prize - Gold Medal (6th Place) Solution
 
-[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)](https://www.kaggle.com/competitions/konwinski-prize/leaderboard)
+[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)]([https://www.kaggle.com/competitions/konwinski-prize/leaderboard](https://www.kaggle.com/certification/competitions/quannguyn12/konwinski-prize)
 
 
 ## 1. Abstract
@@ -68,6 +68,7 @@ The core of our methodology is a sequential five-stage pipeline. Each stage perf
         2.  **Structural Integrity:** A significant penalty is applied if the patch is syntactically invalid or fails a `patch --dry-run` validation.
         3.  **Conciseness Penalty:** An exponential penalty, computed by the `patch_lines_penalty_exponential_aggressive_extreme` function, is applied based on the number of lines in the patch, strongly favoring minimal, targeted changes.
     *   **Selection Logic:** The highest-scoring patch is selected only if it meets a minimum verification threshold (`min_yes_votes = 2`) and its score is statistically significant (exceeds the 99th percentile). If no patch meets these criteria, the agent abstains from submitting a solution.
+
 
 
 
