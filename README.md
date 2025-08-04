@@ -2,11 +2,13 @@
 
 [![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)](https://www.kaggle.com/certification/competitions/quannguyn12/konwinski-prize)
 
+This competition was all about building AI that can fix real bugs from GitHub. The tricky part was making sure the fixes actually worked without breaking anything. Since the test set was hidden, it really tested how well your system could generalize and handle real-world code.
 
+The evaluation was harsh: wrong fixes were heavily penalized, while skipping was slightly punished — so it wasn’t just about fixing more, but fixing smart.
 
-##  Abstract
+For me personally, it was one of the toughest competitions—both in terms of implementation and knowledge. It required a deep understanding of software engineering, debugging, and reasoning about code.
 
-This repository presents the source code and methodology for the 6th place solution in the Konwinski Prize competition. The primary objective of the competition was the development of an autonomous software engineering agent capable of resolving programmatic issues from open-source repositories by automatically generating corrective source code patches. The proposed solution employs a multi-stage methodological pipeline, which systematically reduces the problem's search space through heuristic-guided analysis, generates an ensemble of potential solutions, and utilizes an iterative self-verification mechanism to select the optimal patch. This approach demonstrably achieves high efficacy in automated software repair tasks.
+What's even more interesting is that I had to solve this using only open-weight models like 32B LLMs, which are weaker than some commercial models. That made it even harder to handle complex bugs, but also more satisfying when things worked.
 
 ## System Architecture
 
@@ -69,6 +71,7 @@ The core of our methodology is a sequential five-stage pipeline. Each stage perf
         2.  **Structural Integrity:** A significant penalty is applied if the patch is syntactically invalid or fails a `patch --dry-run` validation.
         3.  **Conciseness Penalty:** An exponential penalty, computed by the `patch_lines_penalty_exponential_aggressive_extreme` function, is applied based on the number of lines in the patch, strongly favoring minimal, targeted changes.
     *   **Selection Logic:** The highest-scoring patch is selected only if it meets a minimum verification threshold (`min_yes_votes = 2`) and its score is statistically significant (exceeds the 99th percentile). If no patch meets these criteria, the agent abstains from submitting a solution.
+
 
 
 
