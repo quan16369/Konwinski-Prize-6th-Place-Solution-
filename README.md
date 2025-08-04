@@ -10,69 +10,53 @@ For me personally, it was one of the toughest competitions—both in terms of im
 
 What's more challenging was that I had to rely on open-weight models like 32B LLMs, which are weaker than commercial models — making it harder to solve complex issues, but also more rewarding when I did.
 
-## System Architecture
+# Select-Patch-Verify-Choose (Logic) Pipeline
 
-The system architecture is predicated on a high-performance stack engineered for large-scale language model inference. The primary components are as follows:
+## TL;DR (Summary)
 
-*   **Language Model:** The core reasoning engine is the **`Qwen-32B-Preview-AWQ`**, a 32-billion parameter, decoder-only transformer model. It has been quantized using the Activation-aware Weight Quantization (AWQ) algorithm to optimize for memory efficiency and inference latency.
+My solution builds a streamlined yet robust pipeline that maximizes the power of large language models (LLMs) while applying extremely strict rule-based filtering. The core of this method is a Select-Patch-Verify-Choose (Logic) pipeline, with effectiveness driven by two main strategies: multi-attempt verification to assess model confidence and a comprehensive scoring function that prioritizes concise, high-confidence patches.
 
-*   **Inference Engine:** We utilize **`vLLM`** for its high-throughput inference capabilities, enabled by its PagedAttention mechanism. This choice was critical for facilitating the batch processing integral to our pipeline's design.
+## Performance Estimates
 
-*   **Hardware Configuration:** The implementation is configured for a multi-GPU environment, specifically **four NVIDIA L4 GPUs**. Tensor parallelism (`tensor_parallel_size = 4`) is employed to distribute the model's parameters and computational load across the hardware.
+| Strategy                          | Private LB (Estimate)                     | Public LB (Estimate)                     |
+|-----------------------------------|-------------------------------------------|------------------------------------------|
+| Select-Patch-Verify-Choose (Logic)| -0.112753 <br> (4 correct, 12 wrong, 55 skipped) | -0.309916 <br> (4 correct, 26 wrong, 41 skipped) |
 
-## Methodological Pipeline
+*(Note: Scores interpreted from notebook values. Actual leaderboard results may vary but ratios reflect true strategy performance.)*
 
-The core of our methodology is a sequential five-stage pipeline. Each stage performs a distinct operation, progressively refining the problem space and generating a candidate solution.
+## Select-Patch-Verify-Choose (Logic) Pipeline
 
-### Heuristic-Guided File and Keyword Identification
+My process prioritizes quality and reliability over quantity, ensuring only the highest-confidence patches are selected.
 
-*   **Objective:** To narrow the search space from the entire repository to a small subset of relevant files and code regions.
-*   **Method:** The LLM is prompted with the natural language problem statement and the repository's directory structure. It performs a heuristic-based analysis to nominate a set of candidate files and relevant search keywords (e.g., function names, class definitions) likely associated with the issue.
-*   **Implementation Details:**
-    *   **Function:** `get_selection_query()`
-    *   **Batch Size:** `BATCH_SIZE = 7` parallel requests are executed to generate a diverse set of hypotheses.
-    *   **Temperature:** A value of `0.6` is used to promote a balance between focused and exploratory identification.
+### Key Pipeline Steps
 
-### Contextual Snippet Extraction
+1. **Select**: Uses LLM to analyze bug reports and entire code directory trees, generating multiple different selection queries. Each query represents a hypothesis about relevant files and code sections.
 
-*   **Objective:** To construct a minimal, yet sufficient, code context for the LLM to analyze.
-*   **Method:** The files identified in Stage 1 are scanned for the specified keywords. For each match, a contextual snippet is extracted, comprising the matched line and `12` preceding and succeeding lines. Overlapping or adjacent snippets within a file are merged to form a single, coherent context block.
-*   **Implementation Details:**
-    *   **Function:** `fetch_file_contents()`
-    *   **Parameters:** `context_lines = 12`, `max_gap = 0`.
+2. **Patch**: Based on selected code segments, the LLM generates a series of candidate patches (diffs).
 
-### Ensemble Generation of Candidate Patches
+3. **Verify**: Each candidate patch is repeatedly verified by the LLM. Consistency in "Yes" answers serves as the primary metric for model confidence.
 
-*   **Objective:** To mitigate the stochastic nature of code generation by producing multiple, distinct solution candidates.
-*   **Method:** An ensemble of candidate patches is generated in parallel. Each generation request is provided with the identical curated context from Stage 2. This increases the probability of obtaining at least one functionally correct patch.
-*   **Implementation Details:**
-    *   **Function:** `get_patch_string()`
-    *   **Batch Size:** `BATCH_SIZE = 7` candidate patches are generated.
-    *   **Temperature:** A value of `0.7` is used to encourage diversity in the output space.
-    *   **Max Tokens:** `MAX_TOKENS = 4096` to constrain the length of the generated output.
+4. **Choose (Logic)**: A rule-based scoring function evaluates each patch. It not only counts "Yes" votes but heavily penalizes invalid, unapplicable, and especially large patches. Only patches passing all strict criteria are selected.
 
-### Autonomous Verification via Self-Correction Loop
+## Key Improvements
 
-*   **Objective:** To autonomously assess the validity and correctness of each generated patch without relying on an external test suite at this stage.
-*   **Method:** A self-verification loop is initiated. Each candidate patch is presented back to the LLM, along with the original problem statement and context. The LLM is then tasked with a binary classification task: to determine if the proposed patch correctly resolves the issue, responding with either `<label>Yes</label>` or `<label>No</label>`.
-*   **Implementation Details:**
-    *   **Function:** `get_verification()`
-    *   **Validation Count:** Each patch is evaluated `VALIDATION_COPY_COUNT = 3` times to ensure judgmental stability.
-    *   **Temperature:** A low value of `0.3` is used to encourage deterministic and consistent evaluations.
+### 1. Multi-attempt Verification for Confidence Assessment
 
-### Quantitative Scoring and Optimal Patch Selection
+Instead of trusting a single LLM self-evaluation (which could be hallucination), I force the model to verify each candidate patch multiple times (VALIDATION_COPY_COUNT). A patch is only considered reliable if it achieves high consensus (multiple "Yes" votes) across verifications.
 
-*   **Objective:** To select the single optimal patch from the candidate set based on a holistic quality score, or to make an explicit decision to abstain if no candidate is of sufficient quality.
-*   **Method:** A scoring function (`calculate_patch_score`) quantifies the quality of each patch based on a weighted combination of empirical signals.
-*   **Implementation Details:**
-    *   **Function:** `choose_patch_string_optimized()`
-    *   **Scoring Factors:**
-        1.  **Verification Agreement:** The primary signal is the squared count of "Yes" votes from Stage 4 (`judgments.count(True) ** 2`).
-        2.  **Structural Integrity:** A significant penalty is applied if the patch is syntactically invalid or fails a `patch --dry-run` validation.
-        3.  **Conciseness Penalty:** An exponential penalty, computed by the `patch_lines_penalty_exponential_aggressive_extreme` function, is applied based on the number of lines in the patch, strongly favoring minimal, targeted changes.
-    *   **Selection Logic:** The highest-scoring patch is selected only if it meets a minimum verification threshold (`min_yes_votes = 2`) and its score is statistically significant (exceeds the 99th percentile). If no patch meets these criteria, the agent abstains from submitting a solution.
+Example aggregated verification results where only the second and sixth patches show strong signals:
 
-
+```python
+# judgments_aggregated
+[
+  [],                             # Candidate 1: No Yes votes
+  [True, True, True],             # Candidate 2: Very strong signal (3/3 Yes)
+  [],                             # Candidate 3: No Yes votes
+  [],                             # Candidate 4: No Yes votes
+  [],                             # Candidate 5: No Yes votes
+  [True, True, True],             # Candidate 6: Very strong signal (3/3 Yes)
+  []                              # Candidate 7: No Yes votes
+]
 
 
 
