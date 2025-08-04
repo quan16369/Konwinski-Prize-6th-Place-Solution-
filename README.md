@@ -68,18 +68,5 @@ The core of our methodology is a sequential five-stage pipeline. Each stage perf
         3.  **Conciseness Penalty:** An exponential penalty, computed by the `patch_lines_penalty_exponential_aggressive_extreme` function, is applied based on the number of lines in the patch, strongly favoring minimal, targeted changes.
     *   **Selection Logic:** The highest-scoring patch is selected only if it meets a minimum verification threshold (`min_yes_votes = 2`) and its score is statistically significant (exceeds the 99th percentile). If no patch meets these criteria, the agent abstains from submitting a solution.
 
-## 4. Code Implementation
 
-The solution's logic is implemented within the `6th-place-solution.ipynb` notebook. The functions below map directly to the stages of the methodological pipeline.
-
-| Function | Pipeline Stage | Purpose |
-| :--- | :--- | :--- |
-| `predict()` | Wrapper | Main entry point; interfaces with the Kaggle evaluation environment. |
-| `predict_inner()` | Orchestrator | Executes the full five-stage pipeline for a given problem instance. |
-| `get_selection_query()` | 1 | Executes heuristic analysis for file and keyword identification. |
-| `fetch_file_contents()` | 2 | Extracts and assembles code snippets into a minimal context. |
-| `get_patch_string()` | 3 | Generates an ensemble of candidate source code patches. |
-| `get_verification()` | 4 | Executes the self-verification loop for each candidate patch. |
-| `calculate_patch_score()` | 5 | Computes a quantitative quality score for a patch. |
-| `choose_patch_string_optimized()`| 5 | Implements the final selection logic to identify the optimal patch. |
 
