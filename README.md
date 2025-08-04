@@ -6,9 +6,9 @@ This competition was all about building AI that can fix real bugs from GitHub. T
 
 The evaluation was harsh: wrong fixes were heavily penalized, while skipping was slightly punished — so it wasn’t just about fixing more, but fixing smart.
 
-For me personally, it was one of the toughest competitions—both in terms of implementation and knowledge. It required a deep understanding of software engineering, debugging, and reasoning about code.
+For me personally, it was one of the toughest competitions—both in terms of implementation and required knowledge. It pushed me to dive deep into how LLMs can be applied to software engineering tasks, and I spent a lot of time learning not only about prompting and patch generation, but also SWE fundamentals like tracebacks, diffs, and how real bugs are fixed.
 
-What's even more interesting is that I had to solve this using only open-weight models like 32B LLMs, which are weaker than some commercial models. That made it even harder to handle complex bugs, but also more satisfying when things worked.
+What's more challenging was that I had to rely on open-weight models like 32B LLMs, which are weaker than commercial models — making it harder to solve complex issues, but also more rewarding when I did.
 
 ## System Architecture
 
@@ -71,6 +71,7 @@ The core of our methodology is a sequential five-stage pipeline. Each stage perf
         2.  **Structural Integrity:** A significant penalty is applied if the patch is syntactically invalid or fails a `patch --dry-run` validation.
         3.  **Conciseness Penalty:** An exponential penalty, computed by the `patch_lines_penalty_exponential_aggressive_extreme` function, is applied based on the number of lines in the patch, strongly favoring minimal, targeted changes.
     *   **Selection Logic:** The highest-scoring patch is selected only if it meets a minimum verification threshold (`min_yes_votes = 2`) and its score is statistically significant (exceeds the 99th percentile). If no patch meets these criteria, the agent abstains from submitting a solution.
+
 
 
 
