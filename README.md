@@ -1,6 +1,6 @@
 # Konwinski Prize - Gold Medal (6th Place) Solution
 
-[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)](https://www.kaggle.com/competitions/konwinski-prize)
+[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)]([https://www.kaggle.com/competitions/konwinski-prize](https://www.kaggle.com/certification/competitions/quannguyn12/konwinski-prize))
 
 ## 1. Abstract
 
@@ -82,3 +82,4 @@ The solution's logic is implemented within the `6th-place-solution.ipynb` notebo
 | `get_verification()` | 4 | Executes the self-verification loop for each candidate patch. |
 | `calculate_patch_score()` | 5 | Computes a quantitative quality score for a patch. |
 | `choose_patch_string_optimized()`| 5 | Implements the final selection logic to identify the optimal patch. |
+
