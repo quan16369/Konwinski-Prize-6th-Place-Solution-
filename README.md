@@ -10,21 +10,19 @@ For me personally, it was one of the toughest competitions—both in terms of im
 
 What's more challenging was that I had to rely on open-weight models like 32B LLMs, which are weaker than commercial models — making it harder to solve complex issues, but also more rewarding when I did.
 
-# Select-Patch-Verify-Choose (Logic) Pipeline
+# Select-Patch-Verify-Choose Pipeline
 
-## TL;DR (Summary)
+## TL;DR 
 
 My solution builds a streamlined yet robust pipeline that maximizes the power of large language models (LLMs) while applying extremely strict rule-based filtering. The core of this method is a Select-Patch-Verify-Choose (Logic) pipeline, with effectiveness driven by two main strategies: multi-attempt verification to assess model confidence and a comprehensive scoring function that prioritizes concise, high-confidence patches.
 
 ## Performance Estimates
 
-| Strategy                          | Private LB (Estimate)                     | Public LB (Estimate)                     |
+| Strategy                          | Private LB                    | Public LB                      |
 |-----------------------------------|-------------------------------------------|------------------------------------------|
-| Select-Patch-Verify-Choose (Logic)| -0.112753 <br> (4 correct, 12 wrong, 55 skipped) | -0.309916 <br> (4 correct, 26 wrong, 41 skipped) |
+| Select-Patch-Verify-Choose (Logic)| 0.008237	 <br> (3 correct, 2 wrong, 115 skipped) | -0.000097 <br> (1 correct, 1 wrong, 69 skipped) |
 
-*(Note: Scores interpreted from notebook values. Actual leaderboard results may vary but ratios reflect true strategy performance.)*
-
-## Select-Patch-Verify-Choose (Logic) Pipeline
+## Select-Patch-Verify-Choose Pipeline
 
 My process prioritizes quality and reliability over quantity, ensuring only the highest-confidence patches are selected.
 
@@ -57,6 +55,8 @@ Example aggregated verification results where only the second and sixth patches 
   [True, True, True],             # Candidate 6: Very strong signal (3/3 Yes)
   []                              # Candidate 7: No Yes votes
 ]
+```
+
 
 
 
