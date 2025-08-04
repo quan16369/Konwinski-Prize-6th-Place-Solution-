@@ -71,7 +71,7 @@ The heart of the strategy lies in the `choose_patch_string_optimized` function. 
   
 Otherwise, the system SKIPs to ensure safety.
 
-### Simplified Scoring Logic Example
+#### Simplified Scoring Logic Example
 
 ```python
 def calculate_patch_score(patch, judgments):
@@ -87,6 +87,7 @@ def calculate_patch_score(patch, judgments):
 
     return score
 ```
+
 
 
 
