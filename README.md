@@ -84,7 +84,7 @@ def calculate_patch_score(patch, judgments):
     score = (judgments.count(True) ** 2) * 5.0
 
     # Subtract exponential size penalty
-    score -= (np.exp(len(patch) / 10) - 1)
+    score -= (np.exp(len(patch) / 10) - 1) * weight
 
     return score
 ```
@@ -119,6 +119,7 @@ The "generate-and-filter" strategy proves highly effective. Trusting the LLM to 
 4. **Enhanced Scoring System**:
    - Add penalties for number of files modified
    - Favors localized changes
+
 
 
 
