@@ -22,6 +22,7 @@ My solution builds a streamlined yet robust pipeline that maximizes the power of
 |:----------------------------------:|:----------------------------------------------:|:---------------------------------------------:|
 | Select-Patch-Verify-Choose  | 0.008237 <br> (3 correct, 2 wrong, 115 skipped) | -0.000097 <br> (1 correct, 1 wrong, 69 skipped) |
 
+<img width="1233" height="704" alt="image" src="https://github.com/user-attachments/assets/419c8c84-4e31-4317-9fe5-4e71aace1f18" />
 
 ## Select-Patch-Verify-Choose Pipeline
 
@@ -87,6 +88,37 @@ def calculate_patch_score(patch, judgments):
 
     return score
 ```
+## Additional Improvements
+
+- **Performance Optimization**: Leverages vLLM's parallel processing for concurrent candidate generation and verification.
+- **Early Filtering**: Invalid or unapplicable patches (failed dry-run) are immediately discarded with heavy penalties, conserving computational resources.
+
+## Reflections and Lessons Learned
+
+### Strengths
+
+The "generate-and-filter" strategy proves highly effective. Trusting the LLM to produce multiple solutions then applying strict logical filtering to select the "gem" balances AI creativity with rule-based stability. The exponential size penalty is decisive in forcing the model to address problems directly.
+
+### Limitations and Future Improvements
+
+1. **Mandatory Testing Phase**:
+   - Analysis of winning solutions shows that objective testing is essential
+   - Beyond LLM verification (Verify), require LLM to automatically generate F2P (Fail-to-Pass) tests
+   - Tests must fail on original code and pass after patching
+   - Most reliable way to both reproduce bugs and confirm fixes without side effects
+
+2. **Smarter Selection Phase** (while effective, could be enhanced by):
+   - Prioritizing traceback analysis (like 5th-place solution's regex approach)
+   - Providing context from existing tests (like the winning solution's unit test examples)
+   - Changing patch format from git diff to SEARCH/REPLACE intermediate format
+
+3. **Retry Mechanism**:
+   - Implement retries when initial test generation fails
+   - Potentially with higher temperature settings for diversity
+
+4. **Enhanced Scoring System**:
+   - Add penalties for number of files modified
+   - Favors localized changes
 
 
 
