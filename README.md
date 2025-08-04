@@ -1,6 +1,7 @@
 # Konwinski Prize - Gold Medal (6th Place) Solution
 
-[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)]([https://www.kaggle.com/competitions/konwinski-prize/leaderboard](https://www.kaggle.com/certification/competitions/quannguyn12/konwinski-prize)
+[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)](https://www.kaggle.com/certification/competitions/quannguyn12/konwinski-prize)
+
 
 
 ## 1. Abstract
