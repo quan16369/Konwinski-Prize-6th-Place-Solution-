@@ -57,7 +57,36 @@ Example aggregated verification results where only the second and sixth patches 
   []                              # Candidate 7: No Yes votes
 ]
 ```
+### 2.Advanced Patch Selection Based on Scores and Penalties
 
+The heart of the strategy lies in the `choose_patch_string_optimized` function. Rather than simply selecting the patch with the most "Yes" votes, it uses a sophisticated scoring formula to ensure quality:
+
+- **High Reward for Consensus**: Score increases with the square of "Yes" votes, strongly favoring patches where the model shows highest confidence.
+- **Exponential Size Penalty**: Longer patches receive exponentially increasing penalties, forcing the LLM to find the most concise, precise solutions and avoid unnecessary changes that might cause side effects.
+- **Multi-criteria Filter**: A patch is only selected if it:
+  1. Has a positive score
+  2. Is in the top percentile (e.g., top 1%)
+  3. Significantly outperforms the second-best patch
+  4. Meets minimum "Yes" vote requirements
+  
+Otherwise, the system SKIPs to ensure safety.
+
+### Simplified Scoring Logic Example
+
+```python
+def calculate_patch_score(patch, judgments):
+    # Heavy penalty if invalid or no Yes votes
+    if not is_valid(patch) or judgments.count(True) == 0:
+        return -LARGE_PENALTY
+
+    # Base score = (Yes votes)^2 * weight
+    score = (judgments.count(True) ** 2) * 5.0
+
+    # Subtract exponential size penalty
+    score -= (np.exp(len(patch) / 10) - 1)
+
+    return score
+```
 
 
 
