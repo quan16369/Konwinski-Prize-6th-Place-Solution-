@@ -58,7 +58,7 @@ Example aggregated verification results where only the second and sixth patches 
   []                              # Candidate 7: No Yes votes
 ]
 ```
-### 2.Advanced Patch Selection Based on Scores and Penalties
+### 2. Patch Selection Based on Scores and Penalties
 <img width="1755" height="1101" alt="image" src="https://github.com/user-attachments/assets/7e4ac6dc-519e-44b6-8d75-765f003f433c" />
 <img width="1746" height="1101" alt="image" src="https://github.com/user-attachments/assets/8c361e3a-84c1-4282-9435-696889f4488d" />
 
@@ -121,6 +121,7 @@ The "generate-and-filter" strategy proves highly effective. Trusting the LLM to 
 4. **Enhanced Scoring System**:
    - Add penalties for number of files modified
    - Favors localized changes
+
 
 
 
