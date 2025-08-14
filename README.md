@@ -1,4 +1,5 @@
-[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)]([https://www.kaggle.com/certification/competitions/quannguyn12/konwinski-prize](https://www.kaggle.com/competitions/konwinski-prize/leaderboard))
+[![Gold Medal - 6th/617](https://img.shields.io/badge/Konwinski%20Prize-6th%20Place%20%2F%20617%20(Gold%20Medal)-FFD700)](https://www.kaggle.com/competitions/konwinski-prize/leaderboard)
+
 # Konwinski Prize - Gold Medal (6th Place) Solution - Team of 2
 
 This competition was all about building AI that can fix real bugs from GitHub. The tricky part was making sure the fixes actually worked without breaking anything. Since the test set was hidden, it really tested how well your system could generalize and handle real-world code.
